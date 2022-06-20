@@ -23,6 +23,12 @@
  * questions.
  */
 
+/*
+ * ===========================================================================
+ * (c) Copyright IBM Corp. 2022, 2022 All Rights Reserved
+ * ===========================================================================
+ */
+
 package java.lang.ref;
 
 /**
@@ -34,59 +40,5 @@ package java.lang.ref;
 final class NativeReferenceQueue<T> extends ReferenceQueue<T> {
     public NativeReferenceQueue() {
         super(0);
-    }
-
-    private static class Lock { };
-    private final Lock lock = new Lock();
-
-    @Override
-    void signal() {
-        lock.notifyAll();
-    }
-    @Override
-    void await() throws InterruptedException {
-        lock.wait();
-    }
-
-    @Override
-    void await(long timeoutMillis) throws InterruptedException {
-        lock.wait(timeoutMillis);
-    }
-
-    @Override
-    boolean enqueue(Reference<? extends T> r) {
-        synchronized(lock) {
-            return enqueue0(r);
-        }
-    }
-
-    @Override
-    public Reference<? extends T> poll() {
-        if (headIsNull())
-            return null;
-
-        synchronized(lock) {
-            return poll0();
-        }
-    }
-
-    @Override
-    public Reference<? extends T> remove(long timeout)
-            throws IllegalArgumentException, InterruptedException {
-        if (timeout < 0)
-            throw new IllegalArgumentException("Negative timeout value");
-        if (timeout == 0)
-            return remove();
-
-        synchronized(lock) {
-            return remove0(timeout);
-        }
-    }
-
-    @Override
-    public Reference<? extends T> remove() throws InterruptedException {
-        synchronized(lock) {
-            return remove0();
-        }
     }
 }
