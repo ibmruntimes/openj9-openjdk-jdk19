@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, 2022, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2022, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,40 +20,25 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-
 #include <stdio.h>
-#include <stdlib.h>
+#include <pthread.h>
 
-#include "jni.h"
+#define STACK_SIZE 0x100000
 
-static jclass test_class;
-static jmethodID mid;
-static jint current_jni_version = JNI_VERSION_19;
-
-JNIEXPORT jint JNICALL
-JNI_OnLoad(JavaVM *vm, void *reserved) {
-    JNIEnv *env;
-    jclass cl;
-
-    (*vm)->GetEnv(vm, (void **) &env, current_jni_version);
-
-    cl = (*env)->FindClass(env, "NativeMethod");
-    test_class = (*env)->NewGlobalRef(env, cl);
-    mid = (*env)->GetMethodID(env, test_class, "walk", "()V");
-
-    return current_jni_version;
-}
-
-/*
- * Class:     NativeMethod
- * Method:    test
- * Signature: ()V
+/**
+ * Creates n threads to execute the given function.
  */
-JNIEXPORT void JNICALL Java_NativeMethod_test(JNIEnv *env, jobject obj) {
-    (*env)->CallVoidMethod(env, obj, mid);
+void start_threads(int n, void *(*f)(void *)) {
+    pthread_t tid;
+    pthread_attr_t attr;
+    int i;
 
-    if ((*env)->ExceptionCheck(env)) {
-        (*env)->ExceptionDescribe(env);
-        (*env)->FatalError(env, "Exception thrown");
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, STACK_SIZE);
+    for (i = 0; i < n ; i++) {
+        int res = pthread_create(&tid, &attr, f, NULL);
+        if (res != 0) {
+            fprintf(stderr, "pthread_create failed: %d\n", res);
+        }
     }
 }
