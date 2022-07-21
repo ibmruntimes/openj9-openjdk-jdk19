@@ -991,7 +991,8 @@ final class VirtualThread extends BaseVirtualThread {
 
     // -- JVM TI support --
 
-    private static volatile boolean notifyJvmtiEvents;  // set by VM
+    // will always be true because a JVM TI agent can be attached at any time
+    private static volatile boolean notifyJvmtiEvents = true;
 
     @JvmtiMountTransition
     private native void notifyJvmtiMountBegin(boolean firstMount);
