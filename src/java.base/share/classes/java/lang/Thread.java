@@ -1755,8 +1755,8 @@ public class Thread implements Runnable {
         }
 
         synchronized (interruptLock) {
-            interrupt0();  // inform VM of interrupt
             interrupted = true;
+            interrupt0();  // inform VM of interrupt
 
             // thread may be blocked in an I/O operation
             Interruptible b = nioBlocker;
