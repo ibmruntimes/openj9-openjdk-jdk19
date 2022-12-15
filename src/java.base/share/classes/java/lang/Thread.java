@@ -1793,6 +1793,10 @@ public class Thread implements Runnable {
      * @revised 6.0, 14
      */
     public boolean isInterrupted() {
+        // use fully qualified name to avoid ambiguous class error
+        if (com.ibm.oti.vm.VM.isJVMInSingleThreadedMode()) {
+            return isInterruptedImpl();
+        }
         return interrupted;
     }
 
@@ -1813,6 +1817,10 @@ public class Thread implements Runnable {
     }
 
     boolean getAndClearInterrupt() {
+        // use fully qualified name to avoid ambiguous class error
+        if (com.ibm.oti.vm.VM.isJVMInSingleThreadedMode()) {
+            return interruptedImpl();
+        }
         synchronized (interruptLock) {
             boolean oldValue = interrupted;
             if (oldValue) {
@@ -3180,6 +3188,7 @@ public class Thread implements Runnable {
     private native void resumeImpl();
     private native void interruptImpl();
     private static native boolean interruptedImpl();
+    private native boolean isInterruptedImpl();
     private native void setNameImpl(long threadRef, String threadName);
     private native int getStateImpl(long eetop);
 
