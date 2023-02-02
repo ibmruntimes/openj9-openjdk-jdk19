@@ -26,7 +26,7 @@
 
 /*
  * ===========================================================================
- * (c) Copyright IBM Corp. 2022, 2022 All Rights Reserved
+ * (c) Copyright IBM Corp. 2022, 2023 All Rights Reserved
  * ===========================================================================
  */
 
@@ -157,13 +157,13 @@ public abstract class CallArranger {
     }
 
     /* Replace DowncallLinker in OpenJDK with the implementation of DowncallLinker specific to OpenJ9 */
-    public static MethodHandle arrangeDowncall(MethodType mt, FunctionDescriptor cDesc) {
+    public MethodHandle arrangeDowncall(MethodType mt, FunctionDescriptor cDesc) {
         MethodHandle handle = DowncallLinker.getBoundMethodHandle(mt, cDesc);
         return handle;
     }
 
     /* Replace UpcallLinker in OpenJDK with the implementation of UpcallLinker specific to OpenJ9 */
-    public static MemorySegment arrangeUpcall(MethodHandle target, MethodType mt, FunctionDescriptor cDesc, MemorySession session) {
+    public MemorySegment arrangeUpcall(MethodHandle target, MethodType mt, FunctionDescriptor cDesc, MemorySession session) {
         return UpcallLinker.make(target, mt, cDesc, session);
     }
 
