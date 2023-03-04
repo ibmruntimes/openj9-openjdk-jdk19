@@ -25,7 +25,7 @@
 
 /*
  * ===========================================================================
- * (c) Copyright IBM Corp. 2022, 2022 All Rights Reserved
+ * (c) Copyright IBM Corp. 2022, 2023 All Rights Reserved
  * ===========================================================================
  */
 
@@ -86,14 +86,27 @@ public class SystemLookup implements SymbolLookup {
         NativeLibrary lib = NativeLibraries.defaultLibrary;
         return name -> {
             Objects.requireNonNull(name);
-            try {
-                long addr = lib.lookup(name);
-                return (addr == 0) ?
-                        Optional.empty() :
-                        Optional.of(MemorySegment.ofAddress(MemoryAddress.ofLong(addr), 0, MemorySession.global()));
-            } catch (NoSuchMethodException e) {
-                return Optional.empty();
+            MemoryAddress funcAddr = null;
+            AixFuncSymbols symbol = AixFuncSymbols.valueOfOrNull(name);
+            if (symbol == null) {
+                try {
+                    /* Look up the libc functions in the default library. */
+                    funcAddr = MemoryAddress.ofLong(lib.lookup(name));
+                } catch (NoSuchMethodException e) {
+                    return Optional.empty();
+                }
+            } else {
+                /* Directly load the specified library with the libc functions
+                 * missing in the default library.
+                 */
+                SymbolLookup funcsLibLookup =
+                        libLookup(libs -> libs.load(jdkLibraryPath("syslookup")));
+                MemorySegment funcs = MemorySegment.ofAddress(funcsLibLookup.lookup("funcs").orElseThrow().address(),
+                    ADDRESS.byteSize() * AixFuncSymbols.values().length, MemorySession.global());
+                funcAddr = funcs.getAtIndex(ADDRESS, symbol.ordinal());
             }
+
+            return Optional.of(MemorySegment.ofAddress(funcAddr, 0L, MemorySession.global()));
         };
     }
 
@@ -225,6 +238,22 @@ public class SystemLookup implements SymbolLookup {
         ;
 
         static WindowsFallbackSymbols valueOfOrNull(String name) {
+            try {
+                return valueOf(name);
+            } catch (IllegalArgumentException e) {
+                return null;
+            }
+        }
+    }
+
+    /* Inlined libc function symbols missing in the default library. */
+    public enum AixFuncSymbols {
+        bcopy, endfsent, getfsent, getfsfile, getfsspec, longjmp,
+        memcpy, memmove, setfsent, setjmp, siglongjmp, strcat,
+        strcpy, strncat, strncpy
+        ;
+
+        static AixFuncSymbols valueOfOrNull(String name) {
             try {
                 return valueOf(name);
             } catch (IllegalArgumentException e) {
