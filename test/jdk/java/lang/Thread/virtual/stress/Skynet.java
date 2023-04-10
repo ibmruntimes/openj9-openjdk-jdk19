@@ -20,13 +20,17 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-
+/*
+ * ===========================================================================
+ * (c) Copyright IBM Corp. 2023, 2023 All Rights Reserved
+ * ===========================================================================
+ */
 /**
  * @test
  * @summary Stress test virtual threads with a variation of the Skynet 1M benchmark
  * @requires vm.continuations
  * @compile --enable-preview -source ${jdk.version} Skynet.java
- * @run main/othervm/timeout=300 --enable-preview Skynet
+ * @run main/othervm/timeout=300 --enable-preview -Xmx768m Skynet
  */
 
 /**
